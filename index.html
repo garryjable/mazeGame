@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <link rel="stylesheet" href="style.css" type="text/css"/>
+  </head>
+
+  <body>
+    <div class='flex-around header'>
+        <h1 >Maze Game</h1>
+    </div>
+    <div class='flex-between'>
+      <canvas id='gameBoard' width="500" height="500"></canvas>
+      <div class='flex-around margins'>
+        <div class='flex-col-around'>
+          <input id="newGame" type="button" value="New Game" onclick="populateBoard();" />
+          <div>SCORE:
+          <span class='score' id="score" name="score"></span>
+          </div>
+          <div > HIGH SCORES
+          <div class='flex-col' id='highscores'>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+    <div class='flex-around header'>
+        <h4 >Made by Garrett Jennings for CS5410</h4>
+    </div>
+    <script src="maze.js" type="text/javascript"></script>
+  </body>
+</html>
+
