@@ -6,16 +6,20 @@ var maze = [];
 
 // all walls are listed as 2 cells, listed in the order of movement
 var wallList = [];
-//var cellList = [];
+var cellList = [];
 var startCell;
 var canvas = document.getElementById('gameBoard');
 var context = canvas.getContext('2d');
 
+
 function initMaze() {
   for (let i = 0; i < mazeWidth; i++) {
     let row = [];
-    for (let i = 0; i < mazeWidth; i++) {
+    for (let j = 0; j < mazeWidth; j++) {
       var cell = {
+        row: i,
+        col: j,
+        checked: false,
         north: null,
         east: null,
         south: null,
@@ -27,81 +31,133 @@ function initMaze() {
   }
 }
 
+
 function primsAlgo() {
   let randWall = getRandNum(0, wallList.length);
   console.log(randWall);
   if (wallList[randWall].type === "horizontal") {
-    wallList[randWall].northCell.south = wallList[randWall].southCell;
-    wallList[randWall].southCell.north = wallList[randWall].northCell;
+    if (typeof(wallList[randWall].southcell) === "object" && wallList[randWall].northCell) {
+      wallList[randWall].northCell.south = wallList[randWall].southcell;
+    } else {
+      wallList[randWall].northCell.south = null;
+    }
+    if (typeof(wallList[randWall].northCell) === "object" && wallList[randWall].southCell) {
+      wallList[randWall].southCell.north = wallList[randWall].northCell;
+    } else {
+      wallList[randWall].southCell.north = null;
+    }
   } else if (wallList[randWall].type === "vertical") {
-    wallList[randWall].westCell.east = wallList[randWall].eastCell;
-    wallList[randWall].eastCell.west = wallList[randWall].westCell;
+    if (typeof(wallList[randWall].eastCell) === "object" && wallList[randWall].westCell) {
+      wallList[randWall].westCell.east = wallList[randWall].eastCell;
+    } else {
+      wallList[randWall].westCell.east = null;
+    }
+    if (typeof(wallList[randWall].westCell) === "object" && wallList[randWall].eastCell) {
+      wallList[randWall].eastCell.west = wallList[randWall].westCell;
+    } else {
+      wallList[randWall].eastCell.west = null;
+    }
   }
-}
-
-function carvePaths() {
-  startCell = getStartLoc();
-  addWalls(startCell.row, startCell.col);
-  primsAlgo();
   wallList = [];
-  addWalls(startCell.row, startCell.col);
-  if (wallList.length === 0) {
+  cellList = [];
+  addWalls(startCell.row, startCell.col, "origin");
+  if (cellList.length === mazeWidth * mazeWidth) {
     return;
   } else {
     primsAlgo();
   }
 }
-//function addCells(row, col) {
-//  let inThere = false;
-//  for (let i = 0; i < cellList.length; i++) {
-//    if (isEqual(cellList[i], maze[row][col])) {
-//      inThere = true;
-//    }
-//  }
-//  if (inThere === false) {
-//    cellList.push(maze[row][col]);
-//  }
-//}
+
+
+function carvePaths() {
+  //startCell = getStartLoc();
+  startCell = {
+    row: 0,
+    col: 0,
+  };
+  addWalls(startCell.row, startCell.col, "origin");
+  primsAlgo();
+}
+
+
+function addCells(row, col) {
+  let inThere = false;
+  for (let i = 0; i < cellList.length; i++) {
+    if (isEqual(cellList[i], maze[row][col])) {
+      inThere = true;
+    }
+  }
+  if (inThere === false) {
+    cellList.push(maze[row][col]);
+  }
+}
+
+
 function addWalls(row, col) {
   let north = null;
   let east = null;
   let south = null;
   let west = null;
+  maze[row][col].checked = true;
   if (maze[row][col].north === null) {
+    let northCell = null;
+    if (typeof(maze[row - 1]) !== "undefined" &&
+        typeof(maze[row - 1][col]) === "object") {
+      northCell = maze[row - 1][col];
+    }
     north = {
       type: "horizontal",
-      northCell: maze[row -1][col],
+      northCell: northCell,
       southCell: maze[row][col],
     }
-  } else {
+  } else if (typeof(maze[row][col].north) === "object" && !maze[row][col].north.checked) {
     addWalls(row - 1, col);
+    addCells(row - 1, col);
   }
   if (maze[row][col].east === null) {
+    let eastCell = null;
+    if (typeof(maze[row]) !== "undefined" &&
+        typeof(maze[row][col - 1]) === "object") {
+      eastCell = maze[row][col - 1];
+    }
     east = {
       type: "vertical",
-      eastCell: maze[row][col - 1],
+      eastCell: eastCell,
       westCell: maze[row][col],
     }
-  } else {
+  } else if (typeof(maze[row][col].east) === "object" && !maze[row][col].east.checked) {
     addWalls(row, col - 1);
+    addCells(row, col - 1);
   }
   if (maze[row][col].south === null) {
+    let southCell = null;
+    if (typeof(maze[row + 1]) !== "undefined" &&
+        typeof(maze[row + 1][col]) === "object") {
+      southCell = maze[row + 1][col];
+    }
     south = {
       type: "horizontal",
       northCell: maze[row][col],
-      southCell: maze[row + 1][col],
+      southCell: southCell,
     }
-  } else {
+  } else if (typeof(maze[row][col].south) === "object" && !maze[row][col].south.checked) {
     addWalls(row + 1, col);
+    addCells(row + 1, col);
   }
   if (maze[row][col].west === null) {
+    let westCell = null;
+    if (typeof(maze[row]) !== "undefined" &&
+        typeof(maze[row][col + 1]) === "object") {
+      westCell = maze[row][col + 1];
+    }
     west = {
       type: "vertical",
       eastCell: maze[row][col],
-      westCell: maze[row][col + 1],
+      westCell: westCell,
     }
-  } else {
+  } else if (typeof(maze[row][col].west) === "object" && !maze[row][col].west.checked) {
     addWalls(row, col + 1);
+    addCells(row, col + 1);
   }
   let newWalls = [];
   if (north !== null) {newWalls.push(north);}
@@ -129,6 +185,7 @@ function addWalls(row, col) {
   }
   return;
 }
+
 
 // this was made by me with help from a tutorial at https://gomakethings.com/check-if-two-arrays-or-objects-are-equal-with-javascript/
 function isEqual(firstObj, secondObj) {
@@ -160,6 +217,7 @@ function isEqual(firstObj, secondObj) {
   return true;
 }
 
+
 function compare (item1, item2) {
   // get the object type
   var itemType = Object.prototype.toString.call(item1);
@@ -181,6 +239,7 @@ function compare (item1, item2) {
   return true;
 }
 
+
 function getStartLoc() {
   let min = 1;
   let max = mazeWidth - 1;
@@ -193,14 +252,17 @@ function getStartLoc() {
          }
 }
 
+
 function getRandNum(max, min) {
   let num = Math.floor(Math.random()*(max-min+1)+min)
   return num;
 }
 
+
 CanvasRenderingContext2D.prototype.clear = function() {
   this.clearRect(0, 0, canvas.width, canvas.height);
 }
+
 
 function gameLoop(elapsedTime) {
     processInput(elapsedTime);
@@ -209,10 +271,14 @@ function gameLoop(elapsedTime) {
     requestAnimationFrame(gameLoop);
 }
 
+
 function processInput(elapsedTime) {
 }
+
+
 function update(elapsedTime) {
 }
+
 
 function render() {
   context.clear();
@@ -222,6 +288,7 @@ function render() {
     }
   }
 }
+
 
 function paintRect(col, row) {
   context.fillStyle = mazeColor;
@@ -251,6 +318,7 @@ function paintRect(col, row) {
     context.stroke()
   }
 }
+
 
 initMaze();
 carvePaths();
