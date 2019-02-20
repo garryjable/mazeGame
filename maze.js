@@ -3,6 +3,8 @@ const mazeColor = 'rgba(66, 66, 66, 1)';
 const rectWidth = 50;
 var mazeWidth = 5;
 var maze = [];
+var connections = [];
+var numTimes = 0;
 
 // all walls are listed as 2 cells, listed in the order of movement
 var wallList = [];
@@ -16,58 +18,25 @@ function initMaze() {
   for (let i = 0; i < mazeWidth; i++) {
     let row = [];
     for (let j = 0; j < mazeWidth; j++) {
+      let connection = [];
       var cell = {
         row: i,
         col: j,
         checked: false,
+        visited: false,
         north: null,
         east: null,
         south: null,
         west: null
       }
       row.push(cell);
+      connection.push(cell);
+      connections[i].push(connection);
+
     }
     maze.push(row);
   }
 }
-
-
-function primsAlgo() {
-  let randWall = getRandNum(0, wallList.length);
-  console.log(randWall);
-  if (wallList[randWall].type === "horizontal") {
-    if (typeof(wallList[randWall].southcell) === "object" && wallList[randWall].northCell) {
-      wallList[randWall].northCell.south = wallList[randWall].southcell;
-    } else {
-      wallList[randWall].northCell.south = null;
-    }
-    if (typeof(wallList[randWall].northCell) === "object" && wallList[randWall].southCell) {
-      wallList[randWall].southCell.north = wallList[randWall].northCell;
-    } else {
-      wallList[randWall].southCell.north = null;
-    }
-  } else if (wallList[randWall].type === "vertical") {
-    if (typeof(wallList[randWall].eastCell) === "object" && wallList[randWall].westCell) {
-      wallList[randWall].westCell.east = wallList[randWall].eastCell;
-    } else {
-      wallList[randWall].westCell.east = null;
-    }
-    if (typeof(wallList[randWall].westCell) === "object" && wallList[randWall].eastCell) {
-      wallList[randWall].eastCell.west = wallList[randWall].westCell;
-    } else {
-      wallList[randWall].eastCell.west = null;
-    }
-  }
-  wallList = [];
-  cellList = [];
-  addWalls(startCell.row, startCell.col, "origin");
-  if (cellList.length === mazeWidth * mazeWidth) {
-    return;
-  } else {
-    primsAlgo();
-  }
-}
-
 
 function carvePaths() {
   //startCell = getStartLoc();
@@ -75,23 +44,7 @@ function carvePaths() {
     row: 0,
     col: 0,
   };
-  addWalls(startCell.row, startCell.col, "origin");
-  primsAlgo();
 }
-
-
-function addCells(row, col) {
-  let inThere = false;
-  for (let i = 0; i < cellList.length; i++) {
-    if (isEqual(cellList[i], maze[row][col])) {
-      inThere = true;
-    }
-  }
-  if (inThere === false) {
-    cellList.push(maze[row][col]);
-  }
-}
-
 
 function addWalls(row, col) {
   let north = null;
@@ -99,65 +52,85 @@ function addWalls(row, col) {
   let south = null;
   let west = null;
   maze[row][col].checked = true;
-  if (maze[row][col].north === null) {
-    let northCell = null;
-    if (typeof(maze[row - 1]) !== "undefined" &&
-        typeof(maze[row - 1][col]) === "object") {
-      northCell = maze[row - 1][col];
+  if ( 0 <= row -1) {
+    if (maze[row][col].north === null) {
+      north = {
+        type: "horizontal",
+        northCell: maze[row - 1][col],
+        southCell: maze[row][col],
+        northCoord: {
+                     row: row - 1,
+                     col: col
+                    },
+        southCoord: {
+                     row: row,
+                     col: col
+                    },
+      }
+    } else if (!maze[row][col].north.checked) {
+      addWalls(row - 1, col);
+      addCells(row - 1, col);
     }
-    north = {
-      type: "horizontal",
-      northCell: northCell,
-      southCell: maze[row][col],
-    }
-  } else if (typeof(maze[row][col].north) === "object" && !maze[row][col].north.checked) {
-    addWalls(row - 1, col);
-    addCells(row - 1, col);
   }
-  if (maze[row][col].east === null) {
-    let eastCell = null;
-    if (typeof(maze[row]) !== "undefined" &&
-        typeof(maze[row][col - 1]) === "object") {
-      eastCell = maze[row][col - 1];
+  if (col + 1 < mazeWidth) {
+    if (maze[row][col].east === null) {
+      east = {
+        type: "vertical",
+        eastCell: maze[row][col + 1],
+        westCell: maze[row][col],
+        eastCoord: {
+                     row: row,
+                     col: col + 1
+                    },
+        westCoord: {
+                     row: row,
+                     col: col
+                    },
+      }
+    } else if (!maze[row][col].east.checked) {
+      addWalls(row, col + 1);
+      addCells(row, col + 1);
     }
-    east = {
-      type: "vertical",
-      eastCell: eastCell,
-      westCell: maze[row][col],
-    }
-  } else if (typeof(maze[row][col].east) === "object" && !maze[row][col].east.checked) {
-    addWalls(row, col - 1);
-    addCells(row, col - 1);
   }
-  if (maze[row][col].south === null) {
-    let southCell = null;
-    if (typeof(maze[row + 1]) !== "undefined" &&
-        typeof(maze[row + 1][col]) === "object") {
-      southCell = maze[row + 1][col];
+  if (row + 1 < mazeWidth) {
+    if (maze[row][col].south === null) {
+      south = {
+        type: "horizontal",
+        northCell: maze[row][col],
+        southCell: maze[row + 1][col],
+        northCoord: {
+                     row: row,
+                     col: col
+                    },
+        southCoord: {
+                     row: row + 1,
+                     col: col
+                    },
+      }
+    } else if (!maze[row][col].south.checked) {
+      addWalls(row + 1, col);
+      addCells(row + 1, col);
     }
-    south = {
-      type: "horizontal",
-      northCell: maze[row][col],
-      southCell: southCell,
-    }
-  } else if (typeof(maze[row][col].south) === "object" && !maze[row][col].south.checked) {
-    addWalls(row + 1, col);
-    addCells(row + 1, col);
   }
-  if (maze[row][col].west === null) {
-    let westCell = null;
-    if (typeof(maze[row]) !== "undefined" &&
-        typeof(maze[row][col + 1]) === "object") {
-      westCell = maze[row][col + 1];
+  if (0 <= col - 1) {
+    if (maze[row][col].west === null) {
+      west = {
+        type: "vertical",
+        eastCell: maze[row][col],
+        westCell: maze[row][col - 1],
+        eastCell: {
+                     row: row,
+                     col: col
+                    },
+        westCell: {
+                     row: row,
+                     col: col - 1
+                    },
+      }
+    } else if (!maze[row][col].west.checked) {
+      addWalls(row, col - 1);
+      addCells(row, col - 1);
     }
-    west = {
-      type: "vertical",
-      eastCell: maze[row][col],
-      westCell: westCell,
-    }
-  } else if (typeof(maze[row][col].west) === "object" && !maze[row][col].west.checked) {
-    addWalls(row, col + 1);
-    addCells(row, col + 1);
   }
   let newWalls = [];
   if (north !== null) {newWalls.push(north);}
@@ -187,9 +160,210 @@ function addWalls(row, col) {
 }
 
 
+
+
+//function primsAlgo() {
+//  numTimes++;
+//  if (numTimes > 10) { return; }
+//  let randWall = getRandNum(0, wallList.length);
+//  console.log("maze");
+//  console.log(maze);
+//  console.log("wallList");
+//  console.log(wallList);
+//  console.log("randWall");
+//  console.log(wallList[randWall]);
+//  let madeConnection = false;
+//  if (wallList[randWall].type === "horizontal") {
+//      if (!wallList[randWall].northCell.visited || !wallList[randWall].southCell.visited) {
+//        let sRow = wallList[randWall].southCoord.row;
+//        let nRow = wallList[randWall].northCoord.row;
+//        let sCol = wallList[randWall].southCoord.col;
+//        let nCol = wallList[randWall].northCoord.col;
+//        maze[nRow][nCol].south = maze[sRow][sCol];
+//        maze[sRow][sCol].north = maze[nRow][nCol];
+//        maze[sRow][sCol].visited = true;
+//        maze[nRow][nCol].visited = true;
+//        madeConnection = true;
+//      }
+//  } else if (wallList[randWall].type === "vertical") {
+//      if (!wallList[randWall].eastCell.visited && !wallList[randWall].westCell.visited) {
+//        let eRow = wallList[randWall].eastCoord.row
+//        let wRow = wallList[randWall].westCoord.row
+//        let eCol = wallList[randWall].eastCoord.col
+//        let wCol = wallList[randWall].westCoord.col
+//        maze[wRow][wCol].east = maze[eRow][eCol];
+//        maze[eRow][eCol].west = maze[wRow][wCol];
+//        maze[eRow][eCol].visited = true;
+//        maze[wRow][wCol].visited = true;
+//        madeConnection = true;
+//      }
+//    }
+//  if (madeConnection === false) {
+//    primsAlgo();
+//  }
+//  wallList = [];
+//  cellList = [];
+//  resetChecked();
+//  addWalls(startCell.row, startCell.col);
+//  maze[startCell.row][startCell.col].visited = true;
+//  if (cellList.length === mazeWidth * mazeWidth) {
+//    return;
+//  } else {
+//    primsAlgo();
+//  }
+//}
+
+
+//function carvePaths() {
+//  //startCell = getStartLoc();
+//  startCell = {
+//    row: 0,
+//    col: 0,
+//  };
+//  addWalls(startCell.row, startCell.col);
+//  primsAlgo();
+//}
+
+
+//function addCells(row, col) {
+//  let inThere = false;
+//  for (let i = 0; i < cellList.length; i++) {
+//    if (isEqual(cellList[i], maze[row][col])) {
+//      inThere = true;
+//    }
+//  }
+//  if (inThere === false) {
+//    cellList.push(maze[row][col]);
+//  }
+//}
+
+
+//function addWalls(row, col) {
+//  let north = null;
+//  let east = null;
+//  let south = null;
+//  let west = null;
+//  maze[row][col].checked = true;
+//  if ( 0 <= row -1) {
+//    if (maze[row][col].north === null) {
+//      north = {
+//        type: "horizontal",
+//        northCell: maze[row - 1][col],
+//        southCell: maze[row][col],
+//        northCoord: {
+//                     row: row - 1,
+//                     col: col
+//                    },
+//        southCoord: {
+//                     row: row,
+//                     col: col
+//                    },
+//      }
+//    } else if (!maze[row][col].north.checked) {
+//      addWalls(row - 1, col);
+//      addCells(row - 1, col);
+//    }
+//  }
+//  if (col + 1 < mazeWidth) {
+//    if (maze[row][col].east === null) {
+//      east = {
+//        type: "vertical",
+//        eastCell: maze[row][col + 1],
+//        westCell: maze[row][col],
+//        eastCoord: {
+//                     row: row,
+//                     col: col + 1
+//                    },
+//        westCoord: {
+//                     row: row,
+//                     col: col
+//                    },
+//      }
+//    } else if (!maze[row][col].east.checked) {
+//      addWalls(row, col + 1);
+//      addCells(row, col + 1);
+//    }
+//  }
+//  if (row + 1 < mazeWidth) {
+//    if (maze[row][col].south === null) {
+//      south = {
+//        type: "horizontal",
+//        northCell: maze[row][col],
+//        southCell: maze[row + 1][col],
+//        northCoord: {
+//                     row: row,
+//                     col: col
+//                    },
+//        southCoord: {
+//                     row: row + 1,
+//                     col: col
+//                    },
+//      }
+//    } else if (!maze[row][col].south.checked) {
+//      addWalls(row + 1, col);
+//      addCells(row + 1, col);
+//    }
+//  }
+//  if (0 <= col - 1) {
+//    if (maze[row][col].west === null) {
+//      west = {
+//        type: "vertical",
+//        eastCell: maze[row][col],
+//        westCell: maze[row][col - 1],
+//        eastCell: {
+//                     row: row,
+//                     col: col
+//                    },
+//        westCell: {
+//                     row: row,
+//                     col: col - 1
+//                    },
+//      }
+//    } else if (!maze[row][col].west.checked) {
+//      addWalls(row, col - 1);
+//      addCells(row, col - 1);
+//    }
+//  }
+//  let newWalls = [];
+//  if (north !== null) {newWalls.push(north);}
+//  if (east !== null) {newWalls.push(east);}
+//  if (south !== null) {newWalls.push(south);}
+//  if (west !== null) {newWalls.push(west);}
+//  for (let i = 0; i < newWalls.length; i++) {
+//    let inThere = false;
+//    for (let j = 0; j < wallList.length; j++) {
+//      if (wallList[j].type === "vertical") {
+//        if (isEqual(wallList[j].northCell, newWalls[i].northCell) &&
+//            isEqual(wallList[j].southCell, newWalls[i].southCell)) {
+//          inThere = true;
+//        }
+//      } else if (wallList[j].type === "horizontal") {
+//        if (isEqual(wallList[j].eastCell, newWalls[i].eastCell) &&
+//            isEqual(wallList[j].westCell, newWalls[i].westCell)) {
+//          inThere = true;
+//        }
+//      }
+//    }
+//    if (inThere === false) {
+//      wallList.push(newWalls[i]);
+//    }
+//  }
+//  return;
+//}
+
+function resetChecked() {
+  for (let i = 0; i < mazeWidth; i++) {
+    for (let j = 0; j < mazeWidth; j++) {
+      maze[i][j].checked = false;
+    }
+  }
+}
+
+
 // this was made by me with help from a tutorial at https://gomakethings.com/check-if-two-arrays-or-objects-are-equal-with-javascript/
 function isEqual(firstObj, secondObj) {
-
+  if(firstObj === null || typeof(firstObj) === "undefined") { return false };
+  if(secondObj === null || typeof(secondObj) === "undefined") { return false };
   // get the first objects type
   let type = Object.prototype.toString.call(firstObj);
   // if the two objects are not the same type, return false
