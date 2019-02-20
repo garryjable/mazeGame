@@ -32,7 +32,39 @@ function initMaze() {
       row.push(cell);
       connection.push(cell);
       connections[i].push(connection);
-
+      if ( i > 0) {
+        wall = {
+          type: "horizontal",
+          northCell: maze[i - 1][col],
+          southCell: maze[i][col],
+          northCoord: {
+                       row: i - 1,
+                       col: j
+                      },
+          southCoord: {
+                       row: i,
+                       col: j
+                      },
+        }
+        wallList.push(wall);
+      }
+      if ( j > 0) {
+        wall = {
+          type: "vertical",
+          eastCell: maze[i][j - 1],
+          westCell: maze[i][j],
+          eastCoord: {
+                       row: i,
+                       col: j - 1
+                      },
+          westCoord: {
+                       row: i,
+                       col: j
+                      },
+        }
+        wallList.push(wall);
+      }
+      }
     }
     maze.push(row);
   }
@@ -44,120 +76,38 @@ function carvePaths() {
     row: 0,
     col: 0,
   };
+  let randWall = getRandNum(0, wallList.length);
+  console.log("maze");
+  console.log(maze);
+  console.log("wallList");
+  console.log(wallList);
+  console.log("randWall");
+  console.log(wallList[randWall]);
+  let madeConnection = false;
+  if (wallList[randWall].type === "horizontal") {
+        let sRow = wallList[randWall].southCoord.row;
+        let nRow = wallList[randWall].northCoord.row;
+        let sCol = wallList[randWall].southCoord.col;
+        let nCol = wallList[randWall].northCoord.col;
+        maze[nRow][nCol].south = maze[sRow][sCol];
+        maze[sRow][sCol].north = maze[nRow][nCol];
+        maze[sRow][sCol].visited = true;
+        maze[nRow][nCol].visited = true;
+        madeConnection = true;
+  } else if (wallList[randWall].type === "vertical") {
+        let eRow = wallList[randWall].eastCoord.row
+        let wRow = wallList[randWall].westCoord.row
+        let eCol = wallList[randWall].eastCoord.col
+        let wCol = wallList[randWall].westCoord.col
+        maze[wRow][wCol].east = maze[eRow][eCol];
+        maze[eRow][eCol].west = maze[wRow][wCol];
+        maze[eRow][eCol].visited = true;
+        maze[wRow][wCol].visited = true;
+        madeConnection = true;
+    }
 }
 
-function addWalls(row, col) {
-  let north = null;
-  let east = null;
-  let south = null;
-  let west = null;
-  maze[row][col].checked = true;
-  if ( 0 <= row -1) {
-    if (maze[row][col].north === null) {
-      north = {
-        type: "horizontal",
-        northCell: maze[row - 1][col],
-        southCell: maze[row][col],
-        northCoord: {
-                     row: row - 1,
-                     col: col
-                    },
-        southCoord: {
-                     row: row,
-                     col: col
-                    },
-      }
-    } else if (!maze[row][col].north.checked) {
-      addWalls(row - 1, col);
-      addCells(row - 1, col);
-    }
-  }
-  if (col + 1 < mazeWidth) {
-    if (maze[row][col].east === null) {
-      east = {
-        type: "vertical",
-        eastCell: maze[row][col + 1],
-        westCell: maze[row][col],
-        eastCoord: {
-                     row: row,
-                     col: col + 1
-                    },
-        westCoord: {
-                     row: row,
-                     col: col
-                    },
-      }
-    } else if (!maze[row][col].east.checked) {
-      addWalls(row, col + 1);
-      addCells(row, col + 1);
-    }
-  }
-  if (row + 1 < mazeWidth) {
-    if (maze[row][col].south === null) {
-      south = {
-        type: "horizontal",
-        northCell: maze[row][col],
-        southCell: maze[row + 1][col],
-        northCoord: {
-                     row: row,
-                     col: col
-                    },
-        southCoord: {
-                     row: row + 1,
-                     col: col
-                    },
-      }
-    } else if (!maze[row][col].south.checked) {
-      addWalls(row + 1, col);
-      addCells(row + 1, col);
-    }
-  }
-  if (0 <= col - 1) {
-    if (maze[row][col].west === null) {
-      west = {
-        type: "vertical",
-        eastCell: maze[row][col],
-        westCell: maze[row][col - 1],
-        eastCell: {
-                     row: row,
-                     col: col
-                    },
-        westCell: {
-                     row: row,
-                     col: col - 1
-                    },
-      }
-    } else if (!maze[row][col].west.checked) {
-      addWalls(row, col - 1);
-      addCells(row, col - 1);
-    }
-  }
-  let newWalls = [];
-  if (north !== null) {newWalls.push(north);}
-  if (east !== null) {newWalls.push(east);}
-  if (south !== null) {newWalls.push(south);}
-  if (west !== null) {newWalls.push(west);}
-  for (let i = 0; i < newWalls.length; i++) {
-    let inThere = false;
-    for (let j = 0; j < wallList.length; j++) {
-      if (wallList[j].type === "vertical") {
-        if (isEqual(wallList[j].northCell, newWalls[i].northCell) &&
-            isEqual(wallList[j].southCell, newWalls[i].southCell)) {
-          inThere = true;
-        }
-      } else if (wallList[j].type === "horizontal") {
-        if (isEqual(wallList[j].eastCell, newWalls[i].eastCell) &&
-            isEqual(wallList[j].westCell, newWalls[i].westCell)) {
-          inThere = true;
-        }
-      }
-    }
-    if (inThere === false) {
-      wallList.push(newWalls[i]);
-    }
-  }
-  return;
-}
+
 
 
 
