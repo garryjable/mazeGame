@@ -64,7 +64,6 @@ function initMaze() {
         }
         wallList.push(wall);
       }
-      }
     }
     maze.push(row);
   }
