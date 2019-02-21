@@ -14,7 +14,11 @@
       <canvas id='gameBoard' width="500" height="500"></canvas>
       <div class='flex-around margins'>
         <div class='flex-col-around'>
-          <input id="newGame" type="button" value="New Game" onclick="populateBoard();" />
+          <input id="newGame" type="button" value="New Game" onclick="newGame();" />
+          <input id="newGame" type="button" value="5 x 5" onclick="newGame(5);" />
+          <input id="newGame" type="button" value="10 x 10" onclick="newGame(10);" />
+          <input id="newGame" type="button" value="15 x 15" onclick="newGame(15);" />
+          <input id="newGame" type="button" value="20 x 20" onclick="newGame(20);" />
           <div>SCORE:
           <span class='score' id="score" name="score"></span>
           </div>
